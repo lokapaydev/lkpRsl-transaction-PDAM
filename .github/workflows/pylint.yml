@@ -1,0 +1,50 @@
+name: Pylint
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_DEV }}
+  SERVICE: rsl-transaction-pdam
+  REGION: asia-southeast2
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pylint
+      - name: Analysing the code with pylint
+        run: |
+          pylint --extension-pkg-whitelist='pydantic' --disable=W,C,R $(git ls-files '*.py')
+      - name: Setup Cloud cli
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY_DEV }}
+          export_default_credentials: true
+      - name: Authorize Docker push
+        run: gcloud auth configure-docker
+      - name: Build and Push Container
+        run: |
+          docker build \
+            -t gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }} .
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
+      - name: Deploy to Cloud Run
+        id: biller-switching-tls
+        uses: google-github-actions/deploy-cloudrun@v0.4.0
+        with:
+          service: ${{ env.SERVICE }}
+          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}
+          region: ${{ env.REGION }}

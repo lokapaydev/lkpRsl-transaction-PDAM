@@ -886,7 +886,7 @@ async def transactionRequestResellerPdam(params: TransactionRequestPdam):
 
         billerCode = params.cart.billerCode
         productCategory = (params.cart.productCategory).upper()
-        keyProduct = f"productDetail:{billerCode}:{productCategory}:{params.cart.product}"
+        keyProduct = f"productDetail:{productCategory}:{billerCode}:{params.cart.product}"
         productInfo = r.hgetall(keyProduct)
         if not productInfo:
             triggerLockRelease(params.userid, redisLockToken)

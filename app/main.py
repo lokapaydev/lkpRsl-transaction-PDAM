@@ -827,7 +827,7 @@ def sendLogPdam(systemTrxId, params, formattedDate, isPromoUsed, rewardAmount, p
         "createdBy": "backend",
         "createdOn": "",
         "transactionDate": formattedDate,
-        "transactionEvent": "RETAIL_PDAM",
+        "transactionEvent": "RETAIL_TRANSACTION",
         "isPromoUsed": isPromoUsed,
         "promoId": params.promoCode,
         "promoAmount": rewardAmount,
